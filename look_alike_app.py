@@ -10,9 +10,32 @@ import json
 import io
 from datetime import datetime
 import dropbox
+import requests
+
+# Replace these with your details
+client_id = st.secrets["APP_KEY"]
+client_secret = st.secrets["APP_SECRET"]
+refresh_token = st.secrets["REFRESH_TOKEN"]
+
+def refresh_access_token(client_id, client_secret, refresh_token):
+    url = "https://api.dropbox.com/oauth2/token"
+    data = {
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+        "client_id": client_id,
+        "client_secret": client_secret
+    }
+    response = requests.post(url, data=data)
+    if response.status_code == 200:
+        return response.json()["access_token"]
+    else:
+        raise Exception(f"Failed to refresh token: {response.json()}")
+
+# Example usage
+new_access_token = refresh_access_token(client_id, client_secret, refresh_token)
 
 # Dropbox setup
-DROPBOX_ACCESS_TOKEN = st.secrets["DROPBOX_ACCESS_TOKEN"]  # Replace with your Dropbox access token
+DROPBOX_ACCESS_TOKEN = new_access_token  # Replace with your Dropbox access token
 DROPBOX_FOLDER = "/image_database"
 METADATA_FILE = f"{DROPBOX_FOLDER}/image_metadata.json"
 dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
